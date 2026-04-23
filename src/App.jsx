@@ -1,16 +1,22 @@
-import { useEffect, useRef } from 'react';
+import './App.css';
+import { useEffect, useRef, useState } from 'react';
 
 function App() {
 
   const audioMap = useRef({});
+  const [activeKeys, setActiveKeys] = useState(new Set());
 
   const playSound = (note) => {
     if (!audioMap.current[note]) {
       audioMap.current[note] = new Audio(`/sounds/${note}.wav`);
     }
 
-    audioMap.current[note].currentTime = 0;
-    audioMap.current[note].play();
+    const audio = audioMap.current[note];
+
+    if (audio.paused) {
+      audio.currentTime = 0;
+      audio.play();
+    }
   };
 
   const stopSound = (note) => {
@@ -35,14 +41,30 @@ function App() {
       };
 
       const handleKeyDown = (e) => {
-        if (e.repeat) return; // Prevent multiple triggers on key hold
+        if (e.repeat) return;
+
         const note = keyMap[e.key];
-        if (note) playSound(note);
+        if (note) {
+          setActiveKeys(prev => {
+            const newSet = new Set(prev);
+            newSet.add(note);
+            return newSet;
+          });
+
+          playSound(note);
+        }
       };
 
       const handleKeyUp = (e) => {
         const note = keyMap[e.key];
-        if (note) stopSound(note);
+        if (note) {
+          setActiveKeys(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(note);
+            return newSet;
+          });
+          stopSound(note);
+        }
       };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -58,9 +80,25 @@ function App() {
 return (
   <div>
     <h1>Harmonium 🎹</h1>
-    <p>Press 1 to 8 keys</p>
+
+    <div className="keyboard">
+      <div className={`white-key ${activeKeys.has("sa") ? "active" : ""}`}>1</div>
+      <div className={`white-key ${activeKeys.has("re") ? "active" : ""}`}>2</div>
+      <div className={`white-key ${activeKeys.has("ga") ? "active" : ""}`}>3</div>
+      <div className={`white-key ${activeKeys.has("ma") ? "active" : ""}`}>4</div>
+      <div className={`white-key ${activeKeys.has("pa") ? "active" : ""}`}>5</div>
+      <div className={`white-key ${activeKeys.has("dha") ? "active" : ""}`}>6</div>
+      <div className={`white-key ${activeKeys.has("ni") ? "active" : ""}`}>7</div>
+      <div className={`white-key ${activeKeys.has("sa_high") ? "active" : ""}`}>8</div>
+
+      <div className="black-key k1"></div>
+      <div className="black-key k2"></div>
+      <div className="black-key k4"></div>
+      <div className="black-key k5"></div>
+      <div className="black-key k6"></div>
+    </div>
   </div>
-)
+);
 
 };
 
